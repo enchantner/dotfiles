@@ -3,6 +3,7 @@ set number
 set mouse=a
 set termguicolors
 set nowrap
+set hidden
 set cursorline
 set guicursor=a:blinkwait5-blinkon5-blinkoff5
 
