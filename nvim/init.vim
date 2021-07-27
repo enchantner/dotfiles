@@ -168,6 +168,9 @@ let g:UltiSnipsJumpForwardTrigger = '<tab>'
 let g:UltiSnipsJumpBackwardTrigger = '<s-tab>'
 let g:UltiSnipsEditSplit = "vertical"
 
+" Disable quote concealing in JSON files
+let g:vim_json_conceal=0
+
 autocmd VimEnter *
       \   if !argc()
       \ |   Startify
