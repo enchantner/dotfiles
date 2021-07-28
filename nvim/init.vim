@@ -5,7 +5,18 @@ set termguicolors
 set nowrap
 set hidden
 set cursorline
-set guicursor=a:blinkwait5-blinkon5-blinkoff5
+
+" set guicursor=a:blinkwait5-blinkon5-blinkoff5
+if has("autocmd")
+  au VimEnter,InsertLeave * silent execute '!echo -ne "\e[1 q"' | redraw!
+  au InsertEnter,InsertChange *
+    \ if v:insertmode == 'i' | 
+    \   silent execute '!echo -ne "\e[5 q"' | redraw! |
+    \ elseif v:insertmode == 'r' |
+    \   silent execute '!echo -ne "\e[3 q"' | redraw! |
+    \ endif
+  au VimLeave * silent execute '!echo -ne "\e[ q"' | redraw!
+endif
 
 syntax enable
 filetype plugin on
@@ -160,8 +171,8 @@ let g:indentLine_char = '|i'
 nmap <silent> <C-E> :NERDTreeToggle<CR>
 let NERDTreeShowHidden=1
 nnoremap q :BD<CR> 
-nmap <C-Right> :BF<CR>
-nmap <C-Left> :BB<CR>
+nmap <C-Right> :bnext<CR>
+nmap <C-Left> :bprevious<CR>
 
 let g:UltiSnipsExpandTrigger = '<tab>'
 let g:UltiSnipsJumpForwardTrigger = '<tab>'
