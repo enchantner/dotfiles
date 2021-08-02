@@ -156,7 +156,6 @@ autocmd BufNewFile,BufRead SConsBuilders set syntax=python
 let g:tex_flavor='latex'
 let g:vimtex_view_method='zathura'
 let g:vimtex_quickfix_mode=0
-set conceallevel=1
 let g:tex_conceal='abdmg'
 
 " nerdcommenter config
@@ -166,7 +165,16 @@ let g:NERDCompactSexyComs = 1
 
 let g:airline#extensions#tabline#enabled = 1
 let g:airline_powerline_fonts = 1
+
 let g:indentLine_char = '|i'
+let g:indentLine_setConceal = 2
+
+" default ''.
+" n for Normal mode
+" v for Visual mode
+" i for Insert mode
+" c for Command line editing, for 'incsearch'
+let g:indentLine_concealcursor = ""
 
 nmap <silent> <C-E> :NERDTreeToggle<CR>
 let NERDTreeShowHidden=1
@@ -182,8 +190,13 @@ let g:UltiSnipsJumpForwardTrigger = '<tab>'
 let g:UltiSnipsJumpBackwardTrigger = '<s-tab>'
 let g:UltiSnipsEditSplit = "vertical"
 
-" Disable quote concealing in JSON files
+au BufNewFile,BufRead Jenkinsfile setf groovy
+
+" Disable quote concealing in JSON and Markdown files
 let g:vim_json_conceal=0
+let g:vim_json_syntax_conceal = 0
+let g:vim_markdown_conceal = 0
+let g:vim_markdown_conceal_code_blocks = 0
 
 autocmd VimEnter *
       \   if !argc()
