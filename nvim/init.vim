@@ -45,6 +45,7 @@ call plug#begin('~/.local/share/nvim/plugged')
 Plug 'vim-airline/vim-airline'
 Plug 'vim-airline/vim-airline-themes'
 Plug 'mhinz/vim-startify'
+Plug 'cespare/vim-toml'
 
 Plug 'lyokha/vim-xkbswitch'
 Plug 'hrsh7th/nvim-compe'
