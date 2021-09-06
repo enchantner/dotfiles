@@ -41,10 +41,12 @@ set nocompatible
 
 call plug#begin('~/.local/share/nvim/plugged')
 
-Plug 'Yggdroot/indentLine'
+" Plug 'Yggdroot/indentLine'
 Plug 'vim-airline/vim-airline'
 Plug 'vim-airline/vim-airline-themes'
 Plug 'mhinz/vim-startify'
+
+Plug 'lyokha/vim-xkbswitch'
 Plug 'hrsh7th/nvim-compe'
 Plug 'ervandew/supertab'
 Plug 'jiangmiao/auto-pairs'
@@ -59,6 +61,7 @@ Plug 'nvim-treesitter/nvim-treesitter', {'do': ':TSUpdate'}
 Plug 'nvim-treesitter/playground'
 Plug 'neovim/nvim-lspconfig'
 Plug 'nvim-lua/lsp_extensions.nvim'
+Plug 'simrat39/rust-tools.nvim'
 " Plug 'fatih/vim-go', { 'do': ':GoUpdateBinaries' }
 " Plug 'rust-lang/rust.vim'
 Plug 'scrooloose/nerdtree'
@@ -70,6 +73,7 @@ Plug 'google/vim-jsonnet'
 " dependencies
 Plug 'nvim-lua/popup.nvim'
 Plug 'nvim-lua/plenary.nvim'
+Plug 'mfussenegger/nvim-dap'
 " telescope
 Plug 'nvim-telescope/telescope.nvim'
 
@@ -82,6 +86,8 @@ let g:python3_host_prog = '/usr/bin/python'
 
 lua << EOF
 local nvim_lsp = require('lspconfig')
+
+require('rust-tools').setup({})
 
 -- Use an on_attach function to only map the following keys 
 -- after the language server attaches to the current buffer
@@ -118,7 +124,7 @@ end
 
 -- Use a loop to conveniently call 'setup' on multiple servers and
 -- map buffer local keybindings when the language server attaches
-local servers = { "pyright", "rust_analyzer", "gopls", "tsserver" }
+local servers = { "pyright", "gopls", "tsserver" }
 for _, lsp in ipairs(servers) do
   nvim_lsp[lsp].setup { on_attach = on_attach }
 end
@@ -197,6 +203,52 @@ let g:vim_json_conceal=0
 let g:vim_json_syntax_conceal = 0
 let g:vim_markdown_conceal = 0
 let g:vim_markdown_conceal_code_blocks = 0
+
+" Disable autojump in AutoPairs
+if get(g:, 'AutoPairsFlyMode', 0) == 0
+function! s:replace_autopairs_map(char)
+  let afterStr = strpart(getline('.'), col('.')-1)
+  if afterStr =~ '^\s*'.a:char
+    return a:char
+  elseif afterStr =~ '^\s*$'
+    let nextLineNum = getpos('.')[1] + 1
+    let nextLine = getline(nextLineNum)
+    while nextLineNum <= line('$') && nextLine =~ '^\s*$'
+      let nextLineNum += 1
+      let nextLine = getline(nextLineNum)
+    endwhile
+    if nextLine =~ '^\s*'.a:char
+      return a:char
+    else
+      return AutoPairsInsert(a:char)
+    endif
+  else
+    return AutoPairsInsert(a:char)
+  endif
+endfunction
+
+function! s:disable_autopair_flymod()
+  if b:autopairs_loaded < 2
+    iunmap <buffer> }
+    iunmap <buffer> ]
+    iunmap <buffer> )
+    iunmap <buffer> `
+    iunmap <buffer> '
+    iunmap <buffer> "
+    inoremap <buffer> <silent> } <c-r>=<SID>replace_autopairs_map('}')<cr>
+    inoremap <buffer> <silent> ] <c-r>=<SID>replace_autopairs_map(']')<cr>
+    inoremap <buffer> <silent> ) <c-r>=<SID>replace_autopairs_map(')')<cr>
+    inoremap <buffer> <silent> ` <c-r>=<SID>replace_autopairs_map('`')<cr>
+    inoremap <buffer> <silent> ' <c-r>=<SID>replace_autopairs_map("'")<cr>
+    inoremap <buffer> <silent> " <c-r>=<SID>replace_autopairs_map('"')<cr>
+  endif
+  let b:autopairs_loaded = 2
+endfunction
+
+augroup AutoPairs
+  autocmd InsertEnter * call s:disable_autopair_flymod()
+augroup END
+endif
 
 autocmd VimEnter *
       \   if !argc()
