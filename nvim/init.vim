@@ -165,6 +165,10 @@ let g:vimtex_view_method='zathura'
 let g:vimtex_quickfix_mode=0
 let g:tex_conceal='abdmg'
 
+" auto kb switch in Normal mode
+let g:XkbSwitchEnabled = 1
+let g:XkbSwitchLib = '/usr/lib/libxkbswitch.so'
+
 " nerdcommenter config
 
 let g:NERDSpaceDelims = 1
