@@ -33,7 +33,7 @@ set expandtab
 " menuone: popup even when there's only one match
 " noinsert: Do not insert text until a selection is made
 " noselect: Do not select, force user to select one from the menu
-set completeopt=menuone,noinsert,noselect
+set completeopt=menu,menuone,noinsert,noselect
 " Avoid showing extra messages when using completion
 set shortmess+=c
 
@@ -46,9 +46,8 @@ Plug 'vim-airline/vim-airline'
 Plug 'vim-airline/vim-airline-themes'
 Plug 'mhinz/vim-startify'
 Plug 'cespare/vim-toml'
-
 Plug 'lyokha/vim-xkbswitch'
-Plug 'hrsh7th/nvim-compe'
+
 Plug 'ervandew/supertab'
 Plug 'jiangmiao/auto-pairs'
 Plug 'scrooloose/nerdcommenter'
@@ -58,16 +57,23 @@ Plug 'lervag/vimtex'
 Plug 'rbgrouleff/bclose.vim'
 Plug 'francoiscabrol/ranger.vim'
 " Plug 'neovimhaskell/haskell-vim'
-Plug 'nvim-treesitter/nvim-treesitter', {'do': ':TSUpdate'}
-Plug 'nvim-treesitter/playground'
+
 Plug 'neovim/nvim-lspconfig'
+Plug 'hrsh7th/cmp-nvim-lsp'
+Plug 'hrsh7th/cmp-buffer'
+Plug 'hrsh7th/nvim-cmp'
+Plug 'SirVer/ultisnips'
+Plug 'quangnguyen30192/cmp-nvim-ultisnips'
 Plug 'nvim-lua/lsp_extensions.nvim'
 Plug 'simrat39/rust-tools.nvim'
+
+Plug 'kyazdani42/nvim-web-devicons'
+Plug 'folke/trouble.nvim'
+
 " Plug 'fatih/vim-go', { 'do': ':GoUpdateBinaries' }
 " Plug 'rust-lang/rust.vim'
 Plug 'scrooloose/nerdtree'
 Plug 'morhetz/gruvbox'
-Plug 'SirVer/ultisnips'
 Plug 'qpkorr/vim-bufkill'
 Plug 'ryanoasis/vim-devicons'
 Plug 'google/vim-jsonnet'
@@ -87,6 +93,7 @@ let g:python3_host_prog = '/usr/bin/python'
 
 lua << EOF
 local nvim_lsp = require('lspconfig')
+local cmp = require('cmp')
 
 require('rust-tools').setup({})
 
@@ -97,7 +104,40 @@ local on_attach = function(client, bufnr)
   local function buf_set_option(...) vim.api.nvim_buf_set_option(bufnr, ...) end
 
   --Enable completion triggered by <c-x><c-o>
-  buf_set_option('omnifunc', 'v:lua.vim.lsp.omnifunc')
+  --buf_set_option('omnifunc', 'v:lua.vim.lsp.omnifunc')
+  cmp.setup({
+    snippet = {
+      expand = function(args)
+        -- For `ultisnips` user.
+        vim.fn["UltiSnips#Anon"](args.body)
+      end,
+    },
+    mapping = {
+      ['<C-d>'] = cmp.mapping.scroll_docs(-4),
+      ['<C-f>'] = cmp.mapping.scroll_docs(4),
+      ['<C-Space>'] = cmp.mapping.complete(),
+      ['<C-e>'] = cmp.mapping.close(),
+      ['<CR>'] = cmp.mapping.confirm({ select = true }),
+    },
+    sources = {
+      { name = 'nvim_lsp' },
+      { name = 'ultisnips' },
+      { name = 'buffer' },
+    }
+  })
+
+  require("trouble").setup {
+    -- your configuration comes here
+    -- or leave it empty to use the default settings
+    -- refer to the configuration section below
+  }
+
+  vim.api.nvim_set_keymap("n", "<leader>xd", "<cmd>Trouble<cr>",
+    {silent = true, noremap = true}
+  )
+  vim.api.nvim_set_keymap("n", "<leader>xx", "<cmd>Trouble lsp_document_diagnostics<cr>",
+    {silent = true, noremap = true}
+  )
 
   -- Mappings.
   local opts = { noremap=true, silent=true }
@@ -123,35 +163,19 @@ local on_attach = function(client, bufnr)
   
 end
 
+
 -- Use a loop to conveniently call 'setup' on multiple servers and
 -- map buffer local keybindings when the language server attaches
+local capabilities = vim.lsp.protocol.make_client_capabilities()
+capabilities = require('cmp_nvim_lsp').update_capabilities(capabilities)
 local servers = { "pyright", "gopls", "tsserver" }
 for _, lsp in ipairs(servers) do
-  nvim_lsp[lsp].setup { on_attach = on_attach }
+  nvim_lsp[lsp].setup {
+      on_attach = on_attach,
+      capabilities = capabilities
+  }
 end
 EOF
-
-let g:compe = {}
-let g:compe.enabled = v:true
-let g:compe.autocomplete = v:true
-let g:compe.debug = v:false
-let g:compe.min_length = 1
-let g:compe.preselect = 'enable'
-let g:compe.throttle_time = 80
-let g:compe.source_timeout = 200
-let g:compe.incomplete_delay = 400
-let g:compe.max_abbr_width = 100
-let g:compe.max_kind_width = 100
-let g:compe.max_menu_width = 100
-let g:compe.documentation = v:true
-
-let g:compe.source = {}
-let g:compe.source.path = v:true
-let g:compe.source.buffer = v:true
-let g:compe.source.calc = v:true
-let g:compe.source.nvim_lsp = v:true
-let g:compe.source.nvim_lua = v:true
-let g:compe.source.ultisnips = v:true
 
 " run Python scripts on F9
 autocmd FileType python map <buffer> <F9> :w<CR>:exec '!python3' shellescape(@%, 1)<CR>
@@ -173,6 +197,20 @@ let g:XkbSwitchLib = '/usr/lib/libxkbswitch.so'
 
 let g:NERDSpaceDelims = 1
 let g:NERDCompactSexyComs = 1
+
+let g:AutoPairsShortcutToggle = "<leader>p"
+
+" Open ranger instead of NERDTree when specifying directory
+" let g:NERDTreeHijackNetrw = 0
+" let g:ranger_replace_netrw = 1
+let g:ranger_map_keys = 0
+map <leader>fr :Ranger<CR>
+
+" Telescope mappings
+nnoremap <leader>ff <cmd>Telescope find_files<cr>
+nnoremap <leader>fg <cmd>Telescope live_grep<cr>
+nnoremap <leader>fb <cmd>Telescope buffers<cr>
+nnoremap <leader>fh <cmd>Telescope help_tags<cr>
 
 let g:airline#extensions#tabline#enabled = 1
 let g:airline_powerline_fonts = 1
