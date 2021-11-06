@@ -168,7 +168,7 @@ end
 -- map buffer local keybindings when the language server attaches
 local capabilities = vim.lsp.protocol.make_client_capabilities()
 capabilities = require('cmp_nvim_lsp').update_capabilities(capabilities)
-local servers = { "pyright", "gopls", "tsserver" }
+local servers = { "pyright", "gopls", "tsserver", "texlab" }
 for _, lsp in ipairs(servers) do
   nvim_lsp[lsp].setup {
       on_attach = on_attach,
@@ -187,7 +187,7 @@ autocmd BufNewFile,BufRead SConsBuilders set syntax=python
 let g:tex_flavor='latex'
 let g:vimtex_view_method='zathura'
 let g:vimtex_quickfix_mode=0
-let g:tex_conceal='abdmg'
+" let g:tex_conceal='abdmg'
 
 " auto kb switch in Normal mode
 let g:XkbSwitchEnabled = 1
