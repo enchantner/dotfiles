@@ -32,7 +32,10 @@ packer.startup(function(use)
   use "folke/trouble.nvim"
 
   -- brackets
-  use "rstacruz/vim-closer"
+  use {
+    "windwp/nvim-autopairs",
+      config = function() require("nvim-autopairs").setup {} end
+  }
 
   -- completion
   use({
@@ -53,6 +56,12 @@ packer.startup(function(use)
       "mfussenegger/nvim-dap",
     },
   })
+  use({
+    "mfussenegger/nvim-dap-python",
+    requires = {
+      "mfussenegger/nvim-dap",
+    },
+  }) 
 
   -- search
   use "nvim-telescope/telescope.nvim"
@@ -76,7 +85,8 @@ packer.startup(function(use)
 end)
 
 vim.opt_global.completeopt = { "menuone", "noinsert", "noselect" }
-vim.opt_global.shortmess:remove("F"):append("c")
+vim.opt_global.shortmess:remove("F")
+vim.opt_global.shortmess:append("c")
 
 vim.wo.wrap = false
 
@@ -96,6 +106,7 @@ g.python3_host_prog = '/usr/bin/python'
 g.airline_powerline_fonts = true
 g["airline#extensions#tabline#enabled"] = 1
 g.NERDTreeShowHidden = 1
+g.NERDTreeMinimalMenu = 1
 
 -- Tree-sitter
 require('nvim-treesitter.configs').setup {
@@ -128,15 +139,26 @@ local nvim_lsp = require('lspconfig')
 local metals_config = require("metals").bare_config()
 metals_config.init_options.statusBarProvider = "on"
 
-local capabilities = vim.lsp.protocol.make_client_capabilities()
-capabilities = require('cmp_nvim_lsp').update_capabilities(capabilities)
+local capabilities = require("cmp_nvim_lsp").default_capabilities()
 metals_config.capabilities = capabilities
 
 local on_attach = function(_, bufnr)
     vim.api.nvim_buf_set_option(bufnr, 'omnifunc', 'v:lua.vim.lsp.omnifunc')
 end
 
+-- Autopairs setup with nvim-cmp
+-- If you want insert `(` after select function or method item
+local cmp_autopairs = require('nvim-autopairs.completion.cmp')
+local cmp = require('cmp')
+cmp.event:on(
+  'confirm_done',
+  cmp_autopairs.on_confirm_done()
+)
+
+-- DAP setup
 local dap = require("dap")
+
+-- Scala DAP
 dap.configurations.scala = {
   {
     type = "scala",
@@ -153,6 +175,10 @@ metals_config.on_attach = function(_, bufnr)
   require("metals").setup_dap()
 end
 
+-- Python DAP
+require('dap-python').setup('~/.pyenv/versions/debugpy/bin/python')
+
+-- lsp setup
 local servers = { "pyright", "gopls", "tsserver", "texlab", "sumneko_lua", "dockerls", "sqlls"}
 for _, lsp in ipairs(servers) do
   if lsp == "sumneko_lua" then
@@ -249,6 +275,9 @@ local function map(mode, lhs, rhs, opts)
   end
   api.nvim_set_keymap(mode, lhs, rhs, options)
 end
+
+-- Save W = w
+map('c', 'W', 'w')
 
 -- NERDTree mappings
 map('n', '<C-E>', ':NERDTreeToggle<CR>', {silent = true})
