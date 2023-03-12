@@ -31,6 +31,8 @@ packer.startup(function(use)
   use "nvim-treesitter/nvim-treesitter"
   use "folke/trouble.nvim"
 
+  use "lervag/vimtex"
+
   -- brackets
   use {
     "windwp/nvim-autopairs",
@@ -61,7 +63,7 @@ packer.startup(function(use)
     requires = {
       "mfussenegger/nvim-dap",
     },
-  }) 
+  })
 
   -- search
   use "nvim-telescope/telescope.nvim"
@@ -107,6 +109,10 @@ g.airline_powerline_fonts = true
 g["airline#extensions#tabline#enabled"] = 1
 g.NERDTreeShowHidden = 1
 g.NERDTreeMinimalMenu = 1
+
+-- LaTeX
+g.vimtex_view_method = 'zathura'
+
 
 -- Tree-sitter
 require('nvim-treesitter.configs').setup {
@@ -278,6 +284,10 @@ end
 
 -- Save W = w
 map('c', 'W', 'w')
+
+-- move lines
+map('n', '<C-Up>', ':m .-2<CR>==')
+map('n', '<C-Down>', ':m .+1<CR>==')
 
 -- NERDTree mappings
 map('n', '<C-E>', ':NERDTreeToggle<CR>', {silent = true})
