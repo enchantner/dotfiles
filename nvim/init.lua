@@ -185,9 +185,9 @@ end
 require('dap-python').setup('~/.pyenv/versions/debugpy/bin/python')
 
 -- lsp setup
-local servers = { "pyright", "gopls", "tsserver", "texlab", "sumneko_lua", "dockerls", "sqlls"}
+local servers = { "pyright", "gopls", "tsserver", "texlab", "lua_ls", "dockerls", "sqlls"}
 for _, lsp in ipairs(servers) do
-  if lsp == "sumneko_lua" then
+  if lsp == "lua_ls" then
     nvim_lsp[lsp].setup {
         on_attach = on_attach,
         capabilities = capabilities,
