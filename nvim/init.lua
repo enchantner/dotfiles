@@ -30,6 +30,7 @@ packer.startup(function(use)
   use "williamboman/nvim-lsp-installer"
   use "nvim-treesitter/nvim-treesitter"
   use "folke/trouble.nvim"
+  use "fatih/vim-go"
 
   use "lervag/vimtex"
 
@@ -109,6 +110,8 @@ g.airline_powerline_fonts = true
 g["airline#extensions#tabline#enabled"] = 1
 g.NERDTreeShowHidden = 1
 g.NERDTreeMinimalMenu = 1
+g.go_def_mode = 'gopls'
+g.go_info_mode = 'gopls'
 
 -- LaTeX
 g.vimtex_view_method = 'zathura'
@@ -141,6 +144,7 @@ require("nvim-lsp-installer").setup({
 })
 
 local nvim_lsp = require('lspconfig')
+local util = require('lspconfig/util')
 
 local metals_config = require("metals").bare_config()
 metals_config.init_options.statusBarProvider = "on"
@@ -198,6 +202,22 @@ for _, lsp in ipairs(servers) do
             }
           }
         }
+    }
+  elseif lsp == "gopls" then
+    nvim_lsp[lsp].setup {
+      on_attach = on_attach,
+      capabilities = capabilities,
+      cmd = {"gopls", "serve"},
+      filetypes = {"go", "gomod"},
+      root_dir = util.root_pattern("go.work", "go.mod", ".git"),
+      settings = {
+        gopls = {
+          analyses = {
+            unusedparams = true,
+          },
+          staticcheck = true,
+        },
+      },
     }
   else
     nvim_lsp[lsp].setup {
