@@ -3,6 +3,10 @@ local cmd = vim.cmd
 local g = vim.g
 local opt = vim.opt
 
+-- disable netrw
+vim.g.loaded_netrw = 1
+vim.g.loaded_netrwPlugin = 1
+
 cmd([[packadd packer.nvim]])
 
 local status_ok, packer = pcall(require, "packer")
@@ -68,15 +72,21 @@ packer.startup(function(use)
 
   -- search
   use "nvim-telescope/telescope.nvim"
-  use ({
-      "preservim/nerdtree",
-      requires = {
-        "ryanoasis/vim-devicons",
-        "kyazdani42/nvim-web-devicons"
-      },
-  })
+  use "nvim-tree/nvim-web-devicons"
+  use {
+    "nvim-telescope/telescope-file-browser.nvim",
+    requires = { "nvim-telescope/telescope.nvim", "nvim-lua/plenary.nvim" }
+  }
+  use {
+    'nvim-tree/nvim-tree.lua',
+    requires = {
+      'nvim-tree/nvim-web-devicons', -- optional
+    },
+  }
+
   -- beauty
-  use "morhetz/gruvbox"
+  use { "catppuccin/nvim", as = "catppuccin" }
+  use {'akinsho/bufferline.nvim', tag = "*", requires = 'nvim-tree/nvim-web-devicons'}
   use({
     "vim-airline/vim-airline",
     requires = {
@@ -104,18 +114,24 @@ opt.mouse = 'a'
 opt.clipboard = "unnamedplus"
 opt.pastetoggle = "<F2>"
 
-cmd'colorscheme gruvbox'
-g.python3_host_prog = '/usr/bin/python'
+vim.cmd.colorscheme "catppuccin"
+g.airline_theme = 'catppuccin'
+
+g.python3_host_prog = '~/.pyenv/versions/neovim/bin/python'
 g.airline_powerline_fonts = true
-g["airline#extensions#tabline#enabled"] = 1
-g.NERDTreeShowHidden = 1
-g.NERDTreeMinimalMenu = 1
+-- g["airline#extensions#tabline#enabled"] = 1
 g.go_def_mode = 'gopls'
 g.go_info_mode = 'gopls'
 
 -- LaTeX
 g.vimtex_view_method = 'zathura'
 
+
+-- Tabs
+require("bufferline").setup{}
+
+-- nvim-tree
+require("nvim-tree").setup()
 
 -- Tree-sitter
 require('nvim-treesitter.configs').setup {
@@ -159,11 +175,6 @@ end
 -- Autopairs setup with nvim-cmp
 -- If you want insert `(` after select function or method item
 local cmp_autopairs = require('nvim-autopairs.completion.cmp')
-local cmp = require('cmp')
-cmp.event:on(
-  'confirm_done',
-  cmp_autopairs.on_confirm_done()
-)
 
 -- DAP setup
 local dap = require("dap")
@@ -242,6 +253,10 @@ vim.api.nvim_create_autocmd("FileType", {
 
 -- Completion config
 local cmp = require('cmp')
+cmp.event:on(
+  'confirm_done',
+  cmp_autopairs.on_confirm_done()
+)
 cmp.setup({
     sources = {
       { name = 'nvim_lsp' },
@@ -284,12 +299,11 @@ vim.api.nvim_set_keymap("n", "<leader>xx", "<cmd>Trouble document_diagnostics<cr
     {silent = true, noremap = true}
 )
 
--- autostart NERDTree 
+-- autostart 
 vim.api.nvim_exec([[  
     autocmd VimEnter *
       \   if !argc()
       \ |   Startify
-      \ |   NERDTree
       \ |  endif
 ]], false)
 
@@ -310,12 +324,22 @@ map('n', '<C-Up>', ':m .-2<CR>==')
 map('n', '<C-Down>', ':m .+1<CR>==')
 
 -- NERDTree mappings
-map('n', '<C-E>', ':NERDTreeToggle<CR>', {silent = true})
+map('n', '<C-E>', ':NvimTreeToggle<CR>', {silent = true})
+-- vim.api.nvim_set_keymap(
+--   "n",
+--   "<C-E>",
+--   ":Telescope file_browser path=%:p:h select_buffer=true<CR>",
+--   { noremap = true }
+-- )
 
 -- Tabs mappings
+-- if vim.loop.os_uname().sysname == 'Darwin' then
 map('n', '<C-Right>', ':bnext<CR>')
 map('n', '<C-Left>', ':bprevious<CR>')
+map('n', '<A-Right>', ':BufferLineMoveNext<CR>')
+map('n', '<A-Left>', ':BufferLineMovePrev<CR>')
 map('n', 'q', ':BD<CR>')
+
 
 -- Delete mappings
 map('n', 'D', '"_D')
