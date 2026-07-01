@@ -17,7 +17,6 @@ vim.opt.tabstop = 2
 vim.opt.smartindent = true
 vim.opt.mouse = 'a'
 vim.opt.clipboard = "unnamedplus"
-vim.opt.pastetoggle = "<F2>"
 
 vim.cmd.colorscheme "catppuccin"
 vim.g.python3_host_prog = '~/.pyenv/versions/neovim/bin/python'

@@ -9,10 +9,26 @@ return {
 
 		local capabilities = require("cmp_nvim_lsp").default_capabilities()
 		metals_config.capabilities = capabilities
+    metals_config.settings = {
+      metals = {
+        autoImportBuild = "all",  -- Automatically import build without prompting on changes
+      }
+    }
 
 		metals_config.on_attach = function(_, bufnr)
-			vim.api.nvim_buf_set_option(bufnr, "omnifunc", "v:lua.vim.lsp.omnifunc")
+      local opts = { buffer = bufnr, remap = false }
+    	vim.api.nvim_buf_set_option(bufnr, "omnifunc", "v:lua.vim.lsp.omnifunc")
 			require("metals").setup_dap()
+
+      -- Organize imports - triggers Metals' organize imports code action
+      vim.keymap.set("n", "<leader>oi", function()
+        vim.lsp.buf.code_action({
+          context = { only = { "source.organizeImports" } },
+          apply = true,
+        })
+      end, opts)
+
+      vim.keymap.set({"n", "i"}, "<leader>ai", vim.lsp.buf.code_action, opts)
 		end
 
 		-- Specific invitation for Scala LSP

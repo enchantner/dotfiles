@@ -1,65 +1,8 @@
 return {
   {
-    "williamboman/mason.nvim",
-    config = function()
-      require("mason").setup()
-    end,
-  },
-  {
-    "williamboman/mason-lspconfig.nvim",
-    dependencies = {
-      "neovim/nvim-lspconfig",
-      "williamboman/mason.nvim",
-    },
-    config = function()
-      require("mason-lspconfig").setup({
-        ensure_installed = { "lua_ls", "pyright", "gopls", "rust_analyzer", "dockerls", "sqlls" },
-        auto_install = true,
-      })
-    end,
-  },
-  {
-    "linux-cultist/venv-selector.nvim",
-    branch = "regexp",
-    dependencies = { "neovim/nvim-lspconfig", "nvim-telescope/telescope.nvim", "mfussenegger/nvim-dap-python" },
-    opts = {
-      -- Your options go here
-      -- name = "venv",
-      -- auto_refresh = false
-    },
-    keys = {
-      -- Keymap to open VenvSelector to pick a venv.
-      { "<leader>vs", "<cmd>VenvSelect<cr>" },
-      -- Keymap to retrieve the venv from a cache (the one previously used for the same project directory).
-      { "<leader>vc", "<cmd>VenvSelectCached<cr>" },
-    },
-  },
-  {
     "neovim/nvim-lspconfig",
-    dependencies = "hrsh7th/cmp-nvim-lsp",
+    dependencies = {"hrsh7th/cmp-nvim-lsp"},
     config = function()
-      local nvim_lsp = require("lspconfig")
-      local util = require("lspconfig/util")
-
-      local path = util.path
-
-      local function get_python_path(workspace)
-        -- Use activated virtualenv.
-        if vim.env.VIRTUAL_ENV then
-          return path.join(vim.env.VIRTUAL_ENV, "bin", "python")
-        end
-
-        -- Find and use virtualenv in workspace directory.
-        for _, pattern in ipairs({ "*", ".*" }) do
-          local match = vim.fn.glob(path.join(workspace, pattern, "pyvenv.cfg"))
-          if match ~= "" then
-            return path.join(path.dirname(match), "bin", "python")
-          end
-        end
-
-        -- Fallback to system Python.
-        return vim.fn.exepath("python3") or vim.fn.exepath("python") or "python"
-      end
 
       -- lsp setup
       local on_attach = function(_, bufnr)
@@ -67,10 +10,10 @@ return {
       end
       local capabilities = require("cmp_nvim_lsp").default_capabilities()
 
-      local servers = { "pyright", "rust_analyzer", "gopls", "tsserver", "texlab", "lua_ls", "dockerls", "sqlls" }
+      local servers = { "pyright", "rust_analyzer", "gopls", "ts_ls", "texlab", "lua_ls", "dockerls", "sqlls" }
       for _, lsp in ipairs(servers) do
         if lsp == "lua_ls" then
-          nvim_lsp[lsp].setup({
+          vim.lsp.config[lsp] = {
             on_attach = on_attach,
             capabilities = capabilities,
             settings = {
@@ -83,9 +26,9 @@ return {
                 },
               },
             },
-          })
+          }
         elseif lsp == "gopls" then
-          nvim_lsp[lsp].setup({
+          vim.lsp.config[lsp] = {
             on_attach = on_attach,
             capabilities = capabilities,
             settings = {
@@ -96,22 +39,34 @@ return {
                 staticcheck = true,
               },
             },
-          })
+          }
         elseif lsp == "pyright" then
-          nvim_lsp[lsp].setup({
+          vim.lsp.config[lsp] = {
             on_attach = on_attach,
             capabilities = capabilities,
             before_init = function(_, config)
-              config.settings.python.pythonPath = get_python_path(config.root_dir)
+              config.settings.python.pythonPath = vim.fn.exepath("python3")
             end
-          })
+          }
         else
-          nvim_lsp[lsp].setup({
+          vim.lsp.config[lsp] = {
             on_attach = on_attach,
             capabilities = capabilities,
-          })
+          }
         end
+        vim.lsp.enable(lsp)
       end
+
+      -- autoformat on save for Rust projects
+      vim.api.nvim_create_autocmd("BufWritePre", {
+        pattern = "*.rs",
+        callback = function()
+          vim.lsp.buf.format({
+            async = false,
+            filter = function(client) return client.name == "rust_analyzer" end,
+          })
+        end,
+      })
 
       vim.g.go_def_mode = "gopls"
       vim.g.go_info_mode = "gopls"
@@ -167,4 +122,18 @@ return {
       )
     end,
   },
+  {
+    "williamboman/mason-lspconfig.nvim",
+    dependencies = {
+      "neovim/nvim-lspconfig",
+      "williamboman/mason.nvim",
+    },
+    config = function()
+      require("mason-lspconfig").setup({
+        ensure_installed = { "lua_ls", "pyright", "gopls", "rust_analyzer", "dockerls", "sqlls" },
+        auto_install = true,
+      })
+    end,
+  },
+
 }

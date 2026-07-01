@@ -7,8 +7,6 @@ local function map(mode, lhs, rhs, opts)
   vim.api.nvim_set_keymap(mode, lhs, rhs, options)
 end
 
--- Save W = w
-map('c', 'W', 'w')
 
 -- move lines
 map('n', '<C-Up>', ':m .-2<CR>==')
