@@ -10,7 +10,22 @@ return {
       end
       local capabilities = require("cmp_nvim_lsp").default_capabilities()
 
-      local servers = { "pyright", "rust_analyzer", "gopls", "ts_ls", "texlab", "lua_ls", "dockerls", "sqlls" }
+      -- Auto-detect a project virtualenv (works for uv-created .venvs too,
+      -- since they use the same pyvenv.cfg layout as any other venv).
+      local function detect_python_path(workspace)
+        if vim.env.VIRTUAL_ENV then
+          return vim.env.VIRTUAL_ENV .. "/bin/python"
+        end
+        for _, pattern in ipairs({ "*", ".*" }) do
+          local match = vim.fn.glob((workspace or vim.fn.getcwd()) .. "/" .. pattern .. "/pyvenv.cfg")
+          if match ~= "" then
+            return vim.fn.fnamemodify(match, ":h") .. "/bin/python"
+          end
+        end
+        return vim.fn.exepath("python3")
+      end
+
+      local servers = { "pyright", "ruff", "rust_analyzer", "gopls", "ts_ls", "texlab", "lua_ls", "dockerls", "sqlls" }
       for _, lsp in ipairs(servers) do
         if lsp == "lua_ls" then
           vim.lsp.config[lsp] = {
@@ -45,8 +60,22 @@ return {
             on_attach = on_attach,
             capabilities = capabilities,
             before_init = function(_, config)
-              config.settings.python.pythonPath = vim.fn.exepath("python3")
+              -- venv-selector.nvim sets pythonPath per-project when a venv
+              -- is picked (<leader>vs/<leader>vc); don't clobber that choice
+              local path = config.settings and config.settings.python and config.settings.python.pythonPath
+              if not path or path == "" then
+                config.settings.python.pythonPath = detect_python_path(config.root_dir)
+              end
             end
+          }
+        elseif lsp == "ruff" then
+          vim.lsp.config[lsp] = {
+            -- pyright handles hover; ruff only lints and formats
+            on_attach = function(client, bufnr)
+              client.server_capabilities.hoverProvider = false
+              on_attach(client, bufnr)
+            end,
+            capabilities = capabilities,
           }
         else
           vim.lsp.config[lsp] = {
@@ -130,7 +159,7 @@ return {
     },
     config = function()
       require("mason-lspconfig").setup({
-        ensure_installed = { "lua_ls", "pyright", "gopls", "rust_analyzer", "dockerls", "sqlls" },
+        ensure_installed = { "lua_ls", "pyright", "ruff", "gopls", "rust_analyzer", "dockerls", "sqlls" },
         auto_install = true,
       })
     end,
